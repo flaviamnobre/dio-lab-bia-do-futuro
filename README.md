@@ -1,4 +1,4 @@
-# 🎓 CRIS - Controle, Reserva, Inteligência e Sucesso
+# 🌈 CRIS - Controle, Reserva, Inteligência e Sucesso
 
 > CRIS: Seu Estrategista de Liberdade Financeira  
 
