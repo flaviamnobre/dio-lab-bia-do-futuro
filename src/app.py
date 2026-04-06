@@ -8,61 +8,104 @@ OLLAMA_URL = "http://localhost:11434/api/generate"
 MODELO = "gpt-oss"
 
 # ============ CARREGAR DADOS ============
+# Nota: MantivemosManteve-se os nomes dos arquivos originais para compatibilidade, 
+# mas a inteligência agora é da/o CRIS.
 perfil = json.load(open('./data/perfil_investidor.json'))
 transacoes = pd.read_csv('./data/transacoes.csv')
 historico = pd.read_csv('./data/historico_atendimento.csv')
-produtos = json.load(open('./data/produtos_financeiros.json'))
 
 # ============ MONTAR CONTEXTO ============
-contexto = f"""
-CLIENTE: {perfil['nome']}, {perfil['idade']} anos, perfil {perfil['perfil_investidor']}
-OBJETIVO: {perfil['objetivo_principal']}
-PATRIMÔNIO: R$ {perfil['patrimonio_total']} | RESERVA: R$ {perfil['reserva_emergencia_atual']}
+contexto_dados = f"""
+NOME ORIGINAL NO CADASTRO: {perfil['nome']}
+IDADE: {perfil['idade']} anos
+DADOS FINANCEIROS ATUAIS: Patrimônio R$ {perfil['patrimonio_total']} | Reserva R$ {perfil['reserva_emergencia_atual']}
 
-TRANSAÇÕES RECENTES:
+TRANSAÇÕES RECENTES PARA ANÁLISE DE CONSCIÊNCIA:
 {transacoes.to_string(index=False)}
 
-ATENDIMENTOS ANTERIORES:
+HISTÓRICO DE ORIENTAÇÕES:
 {historico.to_string(index=False)}
-
-PRODUTOS DISPONÍVEIS:
-{json.dumps(produtos, indent=2, ensure_ascii=False)}
 """
 
-# ============ SYSTEM PROMPT ============
-SYSTEM_PROMPT = """Você é o Edu, um educador financeiro amigável e didático.
+# ============ SYSTEM PROMPT (O DNA DA/O CRIS) ============
+SYSTEM_PROMPT = """Você é CRIS, estrategista de consciência financeira e pessoa conselheira.
+Seu tom é empático, pedagógico e respeitoso à diversidade. 
+Seu foco é ajudar a sair da crise e gerir o dinheiro do dia a dia.
 
-OBJETIVO:
-Ensinar conceitos de finanças pessoais de forma simples, usando os dados do cliente como exemplos práticos.
-
-REGRAS:
-- NUNCA recomende investimentos específicos, apenas explique como funcionam;
-- JAMAIS responda a perguntas fora do tema ensino de finanças pessoais. 
-  Quando ocorrer, responda lembrando o seu papel de educador financeiro;
-- Use os dados fornecidos para dar exemplos personalizados;
-- Linguagem simples, como se explicasse para um amigo;
-- Se não souber algo, admita: "Não tenho essa informação, mas posso explicar...";
-- Sempre pergunte se o cliente entendeu;
-- Responda de forma sucinta e direta, com no máximo 3 parágrafos.
+DIRETRIZES:
+1. Respeite o nome e pronomes escolhidos pelo usuário.
+2. NUNCA recomende investimentos específicos. Explique conceitos (ex: o que é Selic) para dar autonomia.
+3. Se fugirem do tema (finanças do cotidiano), lembre gentilmente seu papel de conselheiro(a/e).
+4. Use os dados de transações para dar exemplos REAIS e práticos, sem julgar os gastos.
+5. Se não souber algo, admita.
+6. Responda de forma sucinta (máximo 3 parágrafos) e sempre pergunte se a explicação foi clara.
 """
 
-# ============ CHAMAR OLLAMA ============
-def perguntar(msg):
+# ============ FUNÇÃO DE COMUNICAÇÃO ============
+def perguntar_cris(msg, nome_usuario, apresentacao_agente):
+    # Colocou-se a preferência de identidade diretamente no contexto do prompt
+    identidade_contexto = f"O usuário quer ser chamado de: {nome_usuario}. Você deve se apresentar como: {apresentacao_agente}."
+    
     prompt = f"""
     {SYSTEM_PROMPT}
+    
+    {identidade_contexto}
 
-    CONTEXTO DO CLIENTE:
-    {contexto}
+    CONTEXTO FINANCEIRO:
+    {contexto_dados}
 
-    Pergunta: {msg}"""
+    Pergunta do Usuário: {msg}"""
 
-    r = requests.post(OLLAMA_URL, json={"model": MODELO, "prompt": prompt, "stream": False})
-    return r.json()['response']
+    try:
+        r = requests.post(OLLAMA_URL, json={"model": MODELO, "prompt": prompt, "stream": False})
+        return r.json()['response']
+    except Exception as e:
+        return "Ops, tive um probleminha técnico. Você pode tentar de novo? 🤝"
 
-# ============ INTERFACE ============
-st.title("🎓 Edu, o Educador Financeiro")
+# ============ INTERFACE STREAMLIT (O FLUXO DE RESPEITO) ============
+st.set_page_config(page_title="CRIS - Consciência Financeira", page_icon="🎯")
+st.title("🎯 CRIS: Estrategista de Liberdade Financeira")
 
-if pergunta := st.chat_input("Sua dúvida sobre finanças..."):
-    st.chat_message("user").write(pergunta)
-    with st.spinner("..."):
-        st.chat_message("assistant").write(perguntar(pergunta))
+# Inicialização do estado de identidade
+if "identidade_definida" not in st.session_state:
+    st.session_state.identidade_definida = False
+
+if not st.session_state.identidade_definida:
+    st.subheader("Boas-vindas ao seu espaço de segurança financeira! 🌈")
+    st.write("Antes de começarmos, queremos te ouvir:")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        nome = st.text_input("Como você gostaria de ser chamado(a/e)?")
+    with col2:
+        apresentacao = st.selectbox("Como eu devo me apresentar para você?", 
+                                   ["A CRIS", "O CRIS", "Elu CRIS"])
+    
+    if st.button("Começar nossa jornada 🤝"):
+        if nome:
+            st.session_state.nome_usuario = nome
+            st.session_state.apresentacao_agente = apresentacao
+            st.session_state.identidade_definida = True
+            st.rerun()
+        else:
+            st.warning("Por favor, me diga como prefere ser chamado(a/e).")
+
+else:
+    # Interface de Chat principal
+    st.info(f"Logado como: **{st.session_state.nome_usuario}** | Agente: **{st.session_state.apresentacao_agente}**")
+    
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    if pergunta := st.chat_input("Como posso te ajudar com seu dinheiro hoje?"):
+        st.session_state.messages.append({"role": "user", "content": pergunta})
+        st.chat_message("user").write(pergunta)
+        
+        with st.spinner("Analisando com cuidado..."):
+            resposta = perguntar_cris(pergunta, st.session_state.nome_usuario, st.session_state.apresentacao_agente)
+            st.session_state.messages.append({"role": "assistant", "content": resposta})
+            st.chat_message("assistant").write(resposta)
