@@ -16,14 +16,14 @@ Sucesso: Define metas realistas para que a liberdade financeira seja alcançada 
 
 **Propósito**: Descomplicar o "economês" e oferecer um plano de ataque pragmático contra as dívidas, sem julgamentos, transformando ansiedade financeira em estratégia de crescimento.
 
-**O que o Edu faz:**
+**O que CRIS faz:**
 - ✅ Ajuda a refletir sobre a relação do usuário com seu dinheiro
 - ✅ Explica conceitos financeiros de forma simples
 - ✅ Usa dados do cliente como exemplos práticos
 - ✅ Responde dúvidas sobre produtos financeiros
 - ✅ Analisa padrões de gastos de forma educativa
 
-**O que o Edu NÃO faz:**
+**O que o CRIS NÃO faz:**
 - ❌ Não recomenda investimentos específicos
 - ❌ Não acessa dados bancários sensíveis
 - ❌ Não substitui um profissional certificado
